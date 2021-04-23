@@ -1,11 +1,42 @@
+import numpy as np
 import pandas as pd
-import matplotlib.pyplot as plt
-
-pd.set_option('display.max_columns', 50)
-pd.set_option('display.width', 1000)
-save_dir = r"C:\Users\Dennis Pkemoi\Desktop\College Education\2020 NESBE Research internship\Methods and work\Prognostics\Bearing_Dataset\2nd_test.xlsx"
-save_dir1 = r"C:\Users\Dennis Pkemoi\Desktop\College Education\2020 NESBE Research internship\Methods and work\Prognostics\Bearing_Dataset\3rd_test.xlsx"
+from sklearn import preprocessing
+from keras.preprocessing.sequence import TimeseriesGenerator
 
 
 def scaler(path):
+    """
+    :param path: Path to custom built dataset using the preprocessing.py script
+    :return: Normalized dataframe
+    """
+    df = pd.read_excel(path)
+    col_norm = df.columns.difference(['Datetime', 'cycles'])
+    scale = preprocessing.MinMaxScaler()
+    norm = pd.DataFrame(scale.fit_transform(df[col_norm]), columns=col_norm, index=df.index)
+    join = norm.join(df['cycles'])
+    return join
+
+
+def arr_generator(df, steps, batch, y_col, is_train=False, is_test=False):
+    """
+    :param is_test: generator called for testing
+    :param is_train: generator called for training
+    :param y_col: String: name of the y column in the dataframe
+    :param df: Pandas dataframe
+    :param steps: Time steps to look back on
+    :param batch: batch size
+    :return: a keras generator object to be passed into model.fit_generator()
+    """
+    x = df[df.columns.difference([y_col])]
+    y = df[y_col]
+    x, y = x.to_numpy(), y.to_numpy()
+    if is_train:
+        generator = TimeseriesGenerator(x, y, length=steps, batch_size=batch)
+        return generator
+    elif is_test:
+        generator = TimeseriesGenerator(x, np.zeros(len(x)), length=steps, batch_size=batch)
+        return generator
+    else:
+        raise Exception('Input must be either "train" or "test"')
+
     
