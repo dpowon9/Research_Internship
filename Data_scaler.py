@@ -1,20 +1,5 @@
 import numpy as np
-import pandas as pd
-from sklearn import preprocessing
 from keras.preprocessing.sequence import TimeseriesGenerator
-
-
-def scaler(path):
-    """
-    :param path: Path to custom built dataset using the preprocessing.py script
-    :return: Normalized dataframe
-    """
-    df = pd.read_excel(path)
-    col_norm = df.columns.difference(['Datetime', 'cycles'])
-    scale = preprocessing.MinMaxScaler()
-    norm = pd.DataFrame(scale.fit_transform(df[col_norm]), columns=col_norm, index=df.index)
-    join = norm.join(df['cycles'])
-    return join
 
 
 def arr_generator(df, steps, batch, y_col, is_train=False, is_test=False):

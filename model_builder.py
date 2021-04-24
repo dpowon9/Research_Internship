@@ -11,9 +11,10 @@ def rul_LSTM(seq_length, features, out_length):
     """
     model = Sequential()
     model.add(LSTM(input_shape=(seq_length, features), units=100, return_sequences=True))
+    model.add(LSTM(units=50, return_sequences=True))
     model.add(Dropout(0.2))
     model.add(LSTM(units=50, return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(units=out_length, activation='sigmoid'))
-    model.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
+    model.compile(loss='mean_squared_logarithmic_error', optimizer='adam')
     return model
