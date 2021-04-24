@@ -38,5 +38,3 @@ def arr_generator(df, steps, batch, y_col, is_train=False, is_test=False):
         return generator
     else:
         raise Exception('Input must be either "train" or "test"')
-
-    

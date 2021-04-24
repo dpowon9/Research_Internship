@@ -79,11 +79,7 @@ def final_form(Dataset):
     return final_df
 
 
-df = final_form(path)
-print(df)
-df.to_excel(save_dir, index=False)
-# df3 = pd.read_csv(save_dir)
-# print(df3)
-# plt.plot(df3['cycles'], df3['clearance_factor1'])
-# plt.show()
+# df = final_form(path)
+# print(df)
+# df.to_excel(save_dir, index=False)
 
