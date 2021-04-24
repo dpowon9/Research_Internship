@@ -23,6 +23,7 @@ train_df = pd.DataFrame(x_scaler.fit_transform(df[col_norm]), columns=col_norm, 
 y_df = pd.DataFrame(y_df, columns=['cycles'], index=df.index)
 train_df = train_df.join(y_df)
 print(train_df.head())
+# Taking the last 50 points for data modelling
 lim = list(train_df['cycles'][-steps:])
 # Data Modelling
 cols = df.columns.to_list()[2:]
@@ -30,3 +31,5 @@ cols = [cols[i:i + 11] for i in range(0, len(cols), 11)]
 for i in range(len(cols)):
     train_df.plot(x='cycles', y=cols[i], subplots=True, xlim=[lim[0], lim[steps-1]], figsize=(20, 20))
     # plt.savefig('images/bearing{0}.pdf'.format(i+1))
+# plt.show()
+
