@@ -1,3 +1,4 @@
+import keras.optimizers
 from keras.models import Sequential
 from keras.layers import Dense, Dropout, LSTM
 
@@ -16,5 +17,6 @@ def rul_LSTM(seq_length, features, out_length):
     model.add(LSTM(units=50, return_sequences=False))
     model.add(Dropout(0.2))
     model.add(Dense(units=out_length, activation='sigmoid'))
-    model.compile(loss='mean_squared_logarithmic_error', optimizer='adam')
+    opt = keras.optimizers.Adam(learning_rate=0.0001)
+    model.compile(loss='mean_squared_logarithmic_error', optimizer=opt, metrics=['mean_squared_logarithmic_error'])
     return model
