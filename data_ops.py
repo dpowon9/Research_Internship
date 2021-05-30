@@ -8,7 +8,10 @@ def arr_generator(df, steps, y_col):
     :param steps: Time steps to look back on
     :return: 3D shaped x array and 1D y array for LSTM input
     """
-    x = df[df.columns.difference([y_col])]
+    try:
+        x = df[df.columns.difference([y_col])]
+    except TypeError:
+        x = df[df.columns.difference(y_col)]
     y = df[y_col]
     x, y = x.to_numpy(), y.to_numpy()
     print('Dimensions of input X Data: ', x.shape)

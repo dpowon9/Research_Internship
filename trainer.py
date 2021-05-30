@@ -5,8 +5,11 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn import preprocessing
-from sklearn.metrics import mean_squared_error, r2_score, explained_variance_score, max_error, mean_squared_log_error
+from sklearn.metrics import precision_score, confusion_matrix, recall_score, f1_score
+from sklearn.utils import class_weight
+import warnings
 
+warnings.filterwarnings('ignore')
 np.random.seed(7)
 
 pd.set_option('display.max_columns', 50)
@@ -17,14 +20,19 @@ path = r"C:\Users\Dennis Pkemoi\Desktop\College Education\2020 NESBE Research in
 steps = 50
 # Reading and scaling the in the training data
 df = pd.read_excel(path)
+df['cycles'] = df['cycles'].div(60)
 col_norm = df.columns.difference(['Datetime', 'cycles'], sort=False)
+print(df.head())
 x_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-y_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-y_df = y_scaler.fit_transform(df[['cycles']])
+# y_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
+# y_df = y_scaler.fit_transform(df[['cycles']])
 train_df = pd.DataFrame(x_scaler.fit_transform(df[col_norm]), columns=col_norm, index=df.index)
-y_df = pd.DataFrame(y_df, columns=['cycles'], index=df.index)
-train_df = train_df.join(y_df)
-print(train_df.head())
+# y_df = pd.DataFrame(y_df, columns=['cycles'], index=df.index)
+train_df = train_df.join(df['cycles'])
+minutes_1 = 1000/60
+train_df['label'] = np.where(train_df['cycles'] <= minutes_1, 1, 0)
+# test_df['label'] = test_df['label_1']
+# test_df.loc[test_df['cycles'] <= minutes_2, 'label'] = 2
 # Taking the last 50 points for data modelling
 lim = list(train_df['cycles'][-steps:])
 # Data Modelling
@@ -32,17 +40,27 @@ cols = df.columns.to_list()[2:]
 cols = [cols[i:i + 11] for i in range(0, len(cols), 11)]
 '''
 for i in range(len(cols)):
-    train_df.plot(x='cycles', y=cols[i], subplots=True, xlim=[lim[0], lim[steps-1]], figsize=(20, 20))
+    test_df.plot(x='cycles', y=cols[i], subplots=True, xlim=[lim[0], lim[steps-1]], figsize=(20, 20))
     plt.savefig('Train_metrics/Data_Visualization/bearing{0}.pdf'.format(i+1))
 plt.show()
 '''
+train_df.drop(columns=['cycles'], axis=1, inplace=True)
+print(train_df.head())
+
 # Setting up training requirements
-X_train, Y_train = arr_generator(train_df, 50, 'cycles')
-model = Bi_LSTM(50, X_train.shape[2], 1)
-call = keras.callbacks.ModelCheckpoint(filepath='Models/Bi_LSTM.hdf5', verbose=1, save_best_only=True)
+X_train, Y_train = arr_generator(train_df, 50, 'label')
+model = Bi_LSTM(50, X_train.shape[2], 3)
+call = keras.callbacks.ModelCheckpoint(filepath='Models/Bi_LSTM.hdf5', monitor='val_loss', mode='min', verbose=1,
+                                       save_best_only=True)
 print(model.summary())
+
 # Training
-model.fit(X_train, Y_train, epochs=20, batch_size=100, validation_split=0.15, verbose=1, callbacks=call)
+weights = class_weight.compute_class_weight('balanced', np.unique(Y_train), Y_train)
+print('Using weights, class 0: %f and class 1: %f' % (weights[0], weights[1]))
+weights = {0: weights[0], 1: weights[1]}
+
+model.fit(X_train, Y_train, epochs=10, batch_size=10, validation_data=(X_train, Y_train), verbose=1,
+          callbacks=call, use_multiprocessing=True, class_weight=weights)
 # Getting metrics
 ep_loss = model.history.history['loss']
 val_loss = model.history.history['val_loss']
@@ -51,35 +69,27 @@ plt.plot(range(len(ep_loss)), ep_loss)
 plt.plot(range(len(ep_loss)), val_loss)
 plt.legend(['Training loss', 'Val loss'])
 plt.xlabel('epoch')
-plt.ylabel('mean_squared_logarithmic_error')
-plt.title('Train mean_squared_logarithmic_error vs epoch')
+plt.ylabel('Loss')
+plt.title('Train loss vs epoch')
 plt.savefig('Train_metrics/loss.pdf')
+
 # Evaluation
 best_model = keras.models.load_model('Models/Bi_LSTM.hdf5')
-performance = best_model.evaluate(X_train, Y_train, batch_size=100)
-y_pred = best_model.predict(X_train)
-y_unscaled = y_scaler.inverse_transform(y_pred)
-y_true = y_scaler.inverse_transform(Y_train.reshape(1, -1))
-y_true = np.array(y_true).flatten()
-final = pd.DataFrame({'Truth': y_true, 'predicted': np.array(y_unscaled).flatten()}, index=np.arange(len(y_pred)))
+performance = best_model.evaluate(X_train, Y_train, batch_size=10)
+y_pred = best_model.predict_classes(X_train)
+y_true = Y_train
+final = pd.DataFrame({'Truth': y_true, 'predicted': np.array(y_pred).flatten()}, index=np.arange(len(y_pred)))
 final.to_excel('Train_metrics/train_res.xlsx', index=False)
-plt.figure(2)
-plt.plot(y_true, y_true)
-plt.plot(y_true, np.array(y_unscaled).flatten())
-plt.legend(['Ground Truth RUL', 'Predicted RUL'])
-plt.xlabel('RUL in minutes')
-plt.ylabel('RUL in minutes')
-plt.title('GT vs Predicted')
-plt.savefig('Train_metrics/GT_v_Pred.pdf')
 # Model metrics
-mse = mean_squared_error(Y_train, y_pred)
-rmse = np.sqrt(mse)
-r2_coef = r2_score(Y_train, y_pred)
-exp_var = explained_variance_score(Y_train, y_pred)
-err = max_error(Y_train, y_pred)
-log_err = mean_squared_log_error(Y_train, y_pred)
-scores = [mse, rmse, r2_coef, exp_var, err, log_err]
-col = ['mse', 'rmse', 'r2 score', 'evs', 'max error', 'msle']
+precision = precision_score(Y_train, y_pred, average='weighted')
+recall = recall_score(Y_train, y_pred, average='weighted')
+fscore = f1_score(Y_train, y_pred)
+scores = [precision, recall, fscore]
+col = ['Precision', 'Recall', 'F1 Score']
 final_res = pd.DataFrame([scores], columns=col)
 print(final_res)
+cf = confusion_matrix(Y_train, y_pred)
+cfd = pd.DataFrame(cf, columns=['Pred-0', 'Pred-1'], index=['GT-0', 'GT-1'])
+print(cfd)
 final_res.to_csv('Train_metrics/eval.csv', index=False)
+cfd.to_csv('Train_metrics/Conf_Mat.csv')

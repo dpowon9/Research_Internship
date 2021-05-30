@@ -31,11 +31,11 @@ def Bi_LSTM(seq_length, features, out_length):
     """
     model = Sequential()
     model.add(Bidirectional(LSTM(units=100, return_sequences=True, dropout=0.2, recurrent_dropout=0.2), input_shape=(seq_length, features)))
-    model.add(Bidirectional(LSTM(units=50, return_sequences=True, dropout=0.2, recurrent_dropout=0.2)))
+    model.add(Bidirectional(LSTM(units=50, return_sequences=True, dropout=0.4, recurrent_dropout=0.2)))
     model.add(Bidirectional(LSTM(units=50, return_sequences=True)))
     model.add(Flatten())
     model.add(Dense(8))
     model.add(Dense(units=out_length, activation='sigmoid'))
-    opt = keras.optimizers.Adam(learning_rate=0.001)
-    model.compile(loss='mean_squared_logarithmic_error', optimizer=opt, metrics=['mean_squared_logarithmic_error'])
+    opt = keras.optimizers.Adam(learning_rate=0.0001)
+    model.compile(loss=keras.losses.SparseCategoricalCrossentropy(from_logits=True), optimizer=opt, metrics=['accuracy'])
     return model
