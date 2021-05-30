@@ -29,10 +29,11 @@ lim = list(test_df['cycles'][-steps:])
 # Data Modelling
 cols = df.columns.to_list()[2:]
 cols = [cols[i:i + 11] for i in range(0, len(cols), 11)]
+'''
 for i in range(len(cols)):
     test_df.plot(x='cycles', y=cols[i], subplots=True, xlim=[lim[0], lim[steps - 1]], figsize=(20, 20))
     plt.savefig('Test_metrics/Data_Visualization/bearing{0}.pdf'.format(i+1))
-
+'''
 test_df.drop(columns=['cycles'], axis=1, inplace=True)
 print(test_df.head())
 
