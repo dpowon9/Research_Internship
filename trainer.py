@@ -10,7 +10,7 @@ from sklearn.utils import class_weight
 import warnings
 
 warnings.filterwarnings('ignore')
-np.random.seed(7)
+np.random.seed(10)
 
 pd.set_option('display.max_columns', 50)
 pd.set_option('display.width', 1000)

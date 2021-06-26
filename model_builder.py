@@ -11,8 +11,9 @@ def Bi_LSTM(seq_length, features, out_length):
     :return: Model
     """
     model = Sequential()
-    model.add(Bidirectional(LSTM(units=100, return_sequences=True, dropout=0.2, recurrent_dropout=0.2), input_shape=(seq_length, features)))
-    model.add(Bidirectional(LSTM(units=50, return_sequences=True, dropout=0.4, recurrent_dropout=0.2)))
+    model.add(Bidirectional(LSTM(units=100, return_sequences=True, recurrent_dropout=0.1), input_shape=(seq_length, features)))
+    model.add(Bidirectional(LSTM(units=50, return_sequences=True, dropout=0.4, recurrent_dropout=0.1)))
+    model.add(Bidirectional(LSTM(units=50, return_sequences=True, dropout=0.4, recurrent_dropout=0.1)))
     model.add(Bidirectional(LSTM(units=50, return_sequences=True)))
     model.add(Flatten())
     model.add(Dense(8))

@@ -7,6 +7,7 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import precision_score, confusion_matrix, recall_score, f1_score
 import warnings
 
+np.random.seed(20)
 warnings.filterwarnings('ignore')
 pd.set_option('display.max_columns', 50)
 pd.set_option('display.width', 1000)
