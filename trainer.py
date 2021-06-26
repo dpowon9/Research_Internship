@@ -24,15 +24,10 @@ df['cycles'] = df['cycles'].div(60)
 col_norm = df.columns.difference(['Datetime', 'cycles'], sort=False)
 print(df.head())
 x_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-# y_scaler = preprocessing.MinMaxScaler(feature_range=(0, 1))
-# y_df = y_scaler.fit_transform(df[['cycles']])
 train_df = pd.DataFrame(x_scaler.fit_transform(df[col_norm]), columns=col_norm, index=df.index)
-# y_df = pd.DataFrame(y_df, columns=['cycles'], index=df.index)
 train_df = train_df.join(df['cycles'])
 minutes_1 = 1000/60
 train_df['label'] = np.where(train_df['cycles'] <= minutes_1, 1, 0)
-# test_df['label'] = test_df['label_1']
-# test_df.loc[test_df['cycles'] <= minutes_2, 'label'] = 2
 # Taking the last 50 points for data modelling
 lim = list(train_df['cycles'][-steps:])
 # Data Modelling
