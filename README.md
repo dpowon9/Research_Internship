@@ -35,3 +35,7 @@ This is a sub paragraph, formatted in heading 3 style
 The second paragraph text
 
 -->
+
+# References:
+
+https://github.com/Azure/lstms_for_predictive_maintenance
